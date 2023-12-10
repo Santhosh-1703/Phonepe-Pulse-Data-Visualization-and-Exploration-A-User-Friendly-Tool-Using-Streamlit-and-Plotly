@@ -1,0 +1,425 @@
+import pandas as pd
+import mysql.connector as sql
+import pymysql 
+import sqlalchemy
+from sqlalchemy import create_engine
+import numpy as np
+import streamlit as st
+from streamlit_option_menu import option_menu
+import plotly.express as px
+from sqlalchemy import text
+
+#******* Establishing connection with MySQL workbench *********
+# CONNECTING WITH MYSQL DATABASE
+ 
+user="#####"
+password="####"
+host="########"
+database= "phonepe_project"
+port = "3306"
+
+engine = create_engine("mysql+pymysql://{0}:{1}@{2}:{3}/{4}".format(user, password, host, port, database))
+con = engine.connect()
+
+st.set_page_config(page_title='PhonePe Pulse Data Visualization and Exploration',page_icon = "💱", layout="wide")
+st.title("***Phonepe Pulse Data Visualization and Exploration: A User-Friendly Tool Using Streamlit and Plotly:chart:***")
+col1,col2,col3 = st.columns([3,8,3])
+with col2:
+    st.subheader("  Hello Connections!:raised_hand_with_fingers_splayed: Welcome to My Project Presentation ")
+    st.info("**Note**:-This data between **2018** to **2023** in **INDIA**")
+
+selected_page = option_menu(
+    menu_title='Options',
+    options=["Home", "Dashboards", "GeoInsights","About"],
+    icons=["house", "trophy", "geo-alt","envelope"],
+    default_index=1,
+    orientation="horizontal",
+    styles = {
+    "container": {"padding": "0!important", "background-color": "white", "size": "cover", "width": "100"},
+    "icon": {"color": "#8766FF", "font-size": "25px"},
+    "nav-link": {"font-size": "25px", "text-align": "center", "margin": "-2px", "--hover-color": "#8766FF"},
+    "nav-link-selected": {"background-color": "#8766FF"}})
+
+if selected_page == "Home":
+    tab1,tab2 = st.tabs(["Pulse Data Scrapping","  Applications and Libraries Used! "])
+    with tab1:
+        st.write(" Pulse Data scraping from PhonePe using a GitHub Cloning helps organizations gather valuable insights about Transactions all over India, Type of Transactions, and user dynamics. By combining this data with information from PhonePe, Organizations can get a comprehensive view of their online UPI transactions and user engagement. This approach enables data-driven decision-making and more effective content strategies.")
+        col1,col2,col3 = st.columns([4,5,2])
+        with col2:
+            st.write("[:open_book: Learn More  >](https://en.wikipedia.org/wiki/PhonePe)")
+            get_data = st.button("Click here to know about PhonePe Pulse Data")
+        if get_data:
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                st.subheader(':orange[Aggregated Details]', divider='rainbow')
+                st.markdown(" :ribbon: From the Aggregated data provided, user can able to view Transaction Amount, Transaction Count,Transaction Type all over India")
+                st.markdown(" :ribbon: User can analyse Brand wise usage, Frequency, Engagement Metrics.")
+            with col2:
+                st.subheader(':violet[Map Details]', divider='rainbow')
+                st.markdown(":star: Users can able to know each District Transaction Count & Transaction Amount ")
+                st.markdown(":star: User can analyse AppUsage Metrics, Audience Retention, Demographic Insights & App Performance ")
+            with col3:
+                st.subheader(':green[Top 10 Details]', divider='rainbow')
+                st.markdown(":coin: Users can able to know Top 10 users from each State, District, Pincode categorized by Year & Quarter ")
+                st.markdown(":coin: Users can analyse Audience Feedback and Suggestions , Sentiment Analysis,  Moderation and Responses")
+    with tab2:
+        st.subheader("  :bulb: Python")
+        st.subheader("  :bulb: MySQL WorkBench")
+        st.subheader("  :bulb: GitHub")
+        st.subheader("  :bulb: Streamlit")
+        st.subheader("  :bulb: Geovisualization")
+        col1,col2,col3 = st.columns(3)
+        with col1:
+            st.download_button("DOWNLOAD THE APP NOW", "https://www.phonepe.com/app-download/")
+        with col2:
+            st.link_button("Get GitHub Pulse Data JSON file", "https://github.com/PhonePe/pulse#readme")
+        with col3:
+            st.link_button("Click here to know about Pulse Data", "https://www.phonepe.com/pulse/about-us/")
+
+elif selected_page == "About":
+    st.header(" :violet[Project Conclusion]")
+    tab1,tab2 = st.tabs(["Features","Connect with me on"])
+    with tab1:
+            st.subheader("This Streamlit application allows users to access and analyze data from PhonePe Pulse Data.", divider='rainbow')
+            st.markdown ("1.   User can able to replicate PulseData JSON file and retrieve all the relevant data (Aggregated, Map, Top 10) using GitHub.")
+            st.markdown("2.    It can collect required data based upon user experience and store them in the Data lake by clicking a upload button.")
+            st.markdown("3.    It has option to select category and migrate its data from the data lake to a MySQL database as Tables.")
+            st.markdown("4.    Able to search and retrieve data from the MySQL database using different SQL Query options, including joining tables to get PulseData details.")
+    with tab2:
+                # Create buttons to direct to different website
+                linkedin_button = st.button("LinkedIn")
+                if linkedin_button:
+                    st.write("[Redirect to LinkedIn Profile > (https://www.linkedin.com/in/santhosh-r-42220519b/)](https://www.linkedin.com/in/santhosh-r-42220519b/)")
+
+                email_button = st.button("Email")
+                if email_button:
+                    st.write("[Redirect to Gmail > santhoshsrajendran@gmail.com](santhoshsrajendran@gmail.com)")
+
+                github_button = st.button("GitHub")
+                if github_button:
+                    st.write("[Redirect to Github Profile > https://github.com/Santhosh-1703](https://github.com/Santhosh-1703)")
+
+elif selected_page == "Dashboards":
+    option_menu = st.radio('**Select your option**',('Aggregated', 'Map','Top Ten categories'),horizontal=True)
+    if option_menu == "Aggregated":
+        # Select tab
+        tab1, tab2 = st.tabs(['Transaction', 'Users'])
+
+        # -------------------------       /     All India Transaction        /        ------------------ #
+        with tab1:
+            col1, col2, col3 = st.columns(3)
+            with col1:
+                in_yr = st.slider('Select Year', min_value=2018, max_value=2023, key='in_yr')
+            with col2:
+                in_qtr = st.slider('Select Quarter', min_value=1, max_value=4, key='in_qtr')
+            with col3:
+                in_typ = st.selectbox('Select Transaction type',
+                                    ('Recharge & bill payments', 'Peer-to-peer payments', 'Merchant payments', 'Financial Services', 'Others'), key='in_typ')
+
+            tab11, tab21 = st.tabs(['Table', 'Charts'])
+            with tab11:
+                coll1, coll2 = st.columns(2)
+                # Corrected SQL query with parameterized query
+                sql_query = """SELECT State, Transactioncount as "Transaction Count", Transactionamount as "Transaction Amount" 
+                            FROM aggregated_transaction 
+                            WHERE Year = %s AND Quarter = %s AND Transactiontype = %s;"""
+                Aggregated_transaction = pd.read_sql_query(sql_query, con, params=(in_yr, in_qtr, in_typ))
+                Aggregated_transaction.index = Aggregated_transaction.index + 1
+                with coll1:
+                    st.subheader(':violet[Transaction Analysis]',divider='rainbow' )
+                    st.table(Aggregated_transaction)
+                with coll2:
+                    st.subheader(" ")
+                    st.subheader(" ")
+                    st.subheader(" ") 
+                    Q2 = """SELECT SUM(Transactioncount) as "Total Transaction Count", AVG(Transactioncount) as "Avg. Transaction Count" FROM aggregated_transaction
+                            WHERE Year = %s AND Quarter = %s AND Transactiontype = %s;"""
+                    Q21 = pd.read_sql_query(Q2, con, params=(in_yr, in_qtr, in_typ))
+                    Q21.set_index('Avg. Transaction Count', inplace=True, drop=True)
+                    st.dataframe(Q21)
+
+                    Q3 = """SELECT SUM(Transactionamount) as "Total Transaction Amount", AVG(Transactionamount) as "Avg. Transaction Amount" FROM aggregated_transaction
+                            WHERE Year = %s AND Quarter = %s AND Transactiontype = %s;"""
+                    Q31 = pd.read_sql_query(Q3, con, params=(in_yr, in_qtr, in_typ))
+                    Q31.set_index('Avg. Transaction Amount', inplace=True, drop=True)
+                    st.write(Q31)
+        with tab21:
+            Col4, Col5 = st.columns(2)
+            with Col4:
+                Q4 = """SELECT State, Transactionamount as "Transaction Amount"  FROM aggregated_transaction
+                        WHERE Year = %s AND Quarter = %s AND Transactiontype = %s;"""
+                Q41 = pd.read_sql_query(Q4, con, params=(in_yr, in_qtr, in_typ))
+                Q41['State'] = Q41['State'].astype(str)
+                Q41['Transaction Amount'] = Q41['Transaction Amount'].astype(float)
+                Q41_fig = px.bar(Q41 , x = 'State', y ='Transaction Amount', color ='Transaction Amount', color_continuous_scale = 'thermal', title = 'Transaction Analysis Chart - Amount',  height = 700,)
+                Q41_fig.update_layout(title_font=dict(size=33),title_font_color='#6739b7')
+                st.plotly_chart(Q41_fig,use_container_width=True)
+            with Col5:
+                Q5 = """SELECT State, Transactioncount as "Transaction Count"  FROM aggregated_transaction
+                        WHERE Year = %s AND Quarter = %s AND Transactiontype = %s;"""
+                Q51 = pd.read_sql_query(Q5, con, params=(in_yr, in_qtr, in_typ))
+                Q51['State'] = Q51['State'].astype(str)
+                Q51['Transaction Count'] = Q51['Transaction Count'].astype(float)
+                Q51_fig = px.bar(Q51 , x = 'State', y ='Transaction Count', color ='Transaction Count', color_continuous_scale = 'thermal', title = 'Transaction Analysis Chart - Count',  height = 700,)
+                Q51_fig.update_layout(title_font=dict(size=33),title_font_color='#6739b7')
+                st.plotly_chart(Q51_fig,use_container_width=True)
+        with tab2:
+            col21, col22 = st.columns(2)
+            with col21:
+                in_yr1 = st.slider('Select Year', min_value=2018, max_value=2023, key='in_yr1')
+            with col22:
+                in_qtr1 = st.slider('Select Quarter', min_value=1, max_value=4, key='in_qtr1')
+            col31,col32 = st.columns(2)
+            with col31:
+                Q6 = """Select Brands, Sum(UserCount) as "Total Count", Avg(UserPercentage) as "Avg. Percentage" from aggregated_user
+                        WHERE Year = %s AND Quarter = %s GROUP BY Brands ORDER BY "Total Count" DESC limit 10;"""
+                Q61 = pd.read_sql_query(Q6, con, params=(in_yr1, in_qtr1))
+                Q61["Avg. Percentage"] = Q61["Avg. Percentage"].round(2)
+                Q61.index = Q61.index + 1
+            col41, col42 = st.columns(2)
+            with col41:
+                st.subheader(':violet[User Analysis - Table]', divider='rainbow')
+                if Q61.empty:
+                    st.warning("###### Sorry No Data to Display for 2022 & 2023", icon="⚠️")
+                else:
+                    st.write(Q61)
+            with col42:
+                st.subheader(':violet[User Analysis - Pie Chart]', divider='rainbow')
+                fig = px.pie(Q61, names='Brands', values='Total Count',
+                title='Total Users Count for Each Brand')
+                # Display the Plotly pie chart using Streamlit
+                st.plotly_chart(fig, use_container_width=True)
+    
+    if option_menu == "Map":
+        tab11, tab12 = st.tabs(['Transaction', 'Users'])
+        with tab11:
+            col51, col52,col53 = st.columns(3)
+            with col51:
+                in_yr2 = st.slider('Select Year', min_value=2018, max_value=2023, key='in_yr2')
+            with col52:
+                in_qtr2 = st.slider('Select Quarter', min_value=1, max_value=4, key='in_qtr2')
+            with col53:
+                selected_state = st.selectbox("Select any State", ('Andaman & Nicobar', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 
+                                                   'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 
+                                                   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu & Kashmir', 'Jharkhand', 
+                                                   'Karnataka', 'Kerala', 'Ladakh', 'Lakshadweep', 'Madhya Pradesh', 
+                                                   'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 
+                                                   'Odisha', 'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 
+                                                   'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'), index = 30)
+            col61,col62 = st.columns(2)
+            with col61:
+                st.subheader(" :violet[Transactions Data - Table]", divider = 'rainbow')
+                Q7 = """SELECT State, District, Year, Quarter, SUM(`Transaction Count`) as "Total Transaction Count", SUM(`Transaction Amount`) as "Total Transaction Amount" from map_transaction 
+                        WHERE Year = %s AND Quarter = %s and State = %s
+                        GROUP BY State, District,Year,Quarter 
+                        ORDER BY State, District;"""
+                Q71 = pd.read_sql_query(Q7, con, params=(in_yr2, in_qtr2, selected_state))
+                Q71.index = Q71.index + 1
+                st.write(Q71)
+            with col62:
+                st.subheader(" :violet[Transactions Data - Chart]", divider = 'rainbow')
+                fig = px.bar(Q71, x="District", y="Total Transaction Count",
+                            color="Total Transaction Amount",
+                            orientation='v',
+                            color_continuous_scale = px.colors.sequential.Plasma,
+                            title="Total Transaction Count and Amount by State and District")
+                st.plotly_chart(fig,use_container_width=True)
+        with tab12:
+            col61, col62,col63 = st.columns(3)
+            with col61:
+                in_yr3 = st.slider('Select Year', min_value=2018, max_value=2023, key='in_yr3')
+            with col62:
+                in_qtr3 = st.slider('Select Quarter', min_value=1, max_value=4, key='in_qtr3')
+            with col63:
+                in_state = st.selectbox("Select any State", ('Andaman & Nicobar', 'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 
+                                                   'Bihar', 'Chandigarh', 'Chhattisgarh', 'Dadra and Nagar Haveli and Daman and Diu', 'Delhi', 
+                                                   'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jammu & Kashmir', 'Jharkhand', 
+                                                   'Karnataka', 'Kerala', 'Ladakh', 'Lakshadweep', 'Madhya Pradesh', 
+                                                   'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 
+                                                   'Odisha', 'Puducherry', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 
+                                                   'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'), key='in_state')
+            col71, col72 = st.columns(2)
+            with col71:
+                st.subheader(" :violet[Users Data - Table]", divider = 'rainbow')
+                Q8 = """SELECT District, SUM(`Registered Users`) as "Total Registered Users", SUM(`Number of Times App Opened`) as "No. of Times App Opened" from map_user
+                        WHERE Year = %s AND Quarter = %s AND State = %s
+                        GROUP BY District 
+                        ORDER BY 2 DESC;"""
+                Q81 = pd.read_sql_query(Q8, con, params=(in_yr3,in_qtr3,in_state))
+                Q81.index = Q81.index + 1
+                st.write(Q81)
+            with col72:
+                st.subheader(" :violet[Users Data - Chart]", divider = 'rainbow')
+                fig = px.scatter(Q81, x='District', y='Total Registered Users', color='No. of Times App Opened',
+                 labels={'Total Registered Users': 'Registered Users'},
+                 title='Registered Users and App Openings by District')
+                st.plotly_chart(fig,use_container_width=True)
+
+    if option_menu == "Top Ten categories":
+        col61, col62, col63 = st.columns(3)
+        with col61:
+            in_yr4 = st.select_slider('Select Year', options=['2018', '2019', '2020', '2021', '2022', '2023'])
+        with col62:
+            in_qtr4 = st.select_slider('Select Quarter', options=['1', '2', '3', '4'])
+        with col63:
+            in_typ4 = st.selectbox('Select Category', ('State', 'Districts', 'Pincode'), key='in_typ4')
+        col4,col5,col6 = st.columns([4, 3, 2])
+        with col5:
+            top_search = st.button("Get Data")
+
+        if top_search:
+            selected_year = in_yr4 if in_yr4 != 'All' else None
+            selected_quarter = in_qtr4 if in_qtr4 != 'All' else None
+
+            df_tt_st = df_tt_dt = df_tt_pc = df_tu_st = df_tu_dt = df_tu_pc = pd.DataFrame()
+
+            if selected_year and selected_quarter:
+                Q401 = """SELECT 'State' as division, t.State as Name, SUM(t.`Transaction Amount`) as "Total Transaction Amount"
+                          FROM top_transaction t
+                          JOIN (SELECT State FROM top_transaction WHERE Year = %s and Quarter = %s GROUP BY State ORDER BY SUM(`Transaction Amount`) DESC LIMIT 10)
+                          subquery ON t.State = subquery.State
+                          WHERE t. Year = %s and t.Quarter = %s
+                          GROUP BY t.State
+                          ORDER BY 3 DESC
+                          LIMIT 10;"""
+                df_tt_st = pd.read_sql_query(Q401, con, params=(in_yr4,in_qtr4,in_yr4,in_qtr4))
+                df_tt_st['division'] = 'State'
+
+                Q402 = """SELECT 'District' as division, t.District as Name, SUM(t.`Transaction Amount`) as "Total Transaction Amount"
+                          FROM top_transaction_by_dist t 
+                          JOIN (SELECT District FROM top_transaction_by_dist WHERE Year = %s and Quarter = %s GROUP BY District ORDER BY SUM(`Transaction Amount`) DESC LIMIT 10)
+                          subquery ON t.District = subquery.District
+                          WHERE t. Year = %s and t.Quarter = %s
+                          GROUP BY t.District
+                          ORDER BY 3 DESC
+                          LIMIT 10;"""
+                df_tt_dt = pd.read_sql_query(Q402, con, params=(in_yr4,in_qtr4,in_yr4,in_qtr4))
+                df_tt_dt['division'] = 'District'
+                
+                Q403 = """SELECT 'District Pincode' as division, t.`District Pincode` as Name, SUM(t.`Transaction Amount`) as "Total Transaction Amount"
+                          FROM top_transaction t 
+                          JOIN (SELECT `District Pincode` FROM top_transaction WHERE Year = %s and Quarter = %s GROUP BY `District Pincode` ORDER BY SUM(`Transaction Amount`) DESC LIMIT 10)
+                          subquery ON t.`District Pincode` = subquery.`District Pincode`
+                          WHERE t. Year = %s and t.Quarter = %s
+                          GROUP BY t.`District Pincode`
+                          ORDER BY 3 DESC
+                          LIMIT 10;"""
+                df_tt_pc = pd.read_sql_query(Q403, con, params=(in_yr4,in_qtr4,in_yr4,in_qtr4))
+                df_tt_pc['division'] = 'District Pincode'
+
+                Q404 = """SELECT 'State' as division, t.State as Name, SUM(t.`Registered User`) as "Total Registered User"
+                          FROM top_user t
+                          JOIN (SELECT State FROM top_user WHERE Year = %s and Quarter = %s GROUP BY State ORDER BY SUM(`Registered User`) DESC LIMIT 10)
+                          subquery ON t.State = subquery.State
+                          WHERE t. Year = %s and t.Quarter = %s
+                          GROUP BY t.State
+                          ORDER BY 3 DESC
+                          LIMIT 10;"""
+                df_tu_st = pd.read_sql_query(Q404, con, params=(in_yr4,in_qtr4,in_yr4,in_qtr4))
+                df_tu_st['division'] = 'State'
+
+                Q405 = """SELECT 'District' as division, t.District as Name, SUM(t.`Registered User`) as "Total Registered User"
+                          FROM top_user_by_dist t 
+                          JOIN (SELECT District FROM top_user_by_dist WHERE Year = %s and Quarter = %s GROUP BY District ORDER BY SUM(`Registered User`) DESC LIMIT 10)
+                          subquery ON t.District = subquery.District
+                          WHERE t. Year = %s and t.Quarter = %s
+                          GROUP BY t.District
+                          ORDER BY 3 DESC
+                          LIMIT 10;"""
+                df_tu_dt = pd.read_sql_query(Q405, con, params=(in_yr4,in_qtr4,in_yr4,in_qtr4))
+                df_tu_dt['division'] = 'District'
+
+                Q406 = """SELECT 'District Pincode' as division, t.`District Pincode` as Name, SUM(t.`Registered User`) as "Total Registered User"
+                          FROM top_user t
+                          JOIN (SELECT `District Pincode` FROM top_user WHERE Year = %s and Quarter = %s GROUP BY `District Pincode` ORDER BY SUM(`Registered User`) DESC LIMIT 10)
+                          subquery ON t.`District Pincode` = subquery.`District Pincode`
+                          WHERE t. Year = %s and t.Quarter = %s
+                          GROUP BY t.`District Pincode`
+                          ORDER BY 3 DESC
+                          LIMIT 10;"""
+                df_tu_pc = pd.read_sql_query(Q406, con, params=(in_yr4,in_qtr4,in_yr4,in_qtr4))
+                df_tu_pc['division'] = 'District Pincode'
+
+                df_tt_con = pd.concat([df_tt_dt, df_tt_st, df_tt_pc], axis=0).reset_index()
+                df_tu_con = pd.concat([df_tu_dt, df_tu_st, df_tu_pc], axis=0).reset_index()
+
+                col1,col2 = st.columns([2,3.5])
+                with col2:
+                    with col2:
+                        fig_tt = px.sunburst(df_tt_con, path=['division','Name'],
+                                            values='Total Transaction Amount',
+                                            color='division',
+                                            color_discrete_map={'State': '#FAA026','District': '#65FAAB', 'District Pincode':'#ADD8E6'},
+                                            hover_data=['division', 'Name', 'Total Transaction Amount'],
+                                            title="Top 10 Transaction Details")
+                        fig_tt.update_layout(title_x=0.15, title_y=0.99, margin=dict(t=20, l=10, r=10, b=0))
+                        st.plotly_chart(fig_tt, theme="streamlit", use_container_width=True)
+                with col1:
+                    if in_typ4 == 'State':
+                        df = df_tt_st.groupby('Name')['Total Transaction Amount'].sum().sort_values(ascending=False)
+                        st.markdown(':violet[Transaction Analysis - Transaction Amount  (INR)]')
+                        st.dataframe(df, use_container_width=True)
+                    elif in_typ4 == 'Districts':
+                        df = df_tt_dt.groupby('Name')['Total Transaction Amount'].sum().sort_values(ascending=False)
+                        st.markdown(':violet[Transaction Analysis - Transaction Amount  (INR)]')
+                        st.dataframe(df, use_container_width=True)
+                    elif in_typ4 == 'Pincode':
+                        df = df_tt_pc.groupby('Name')['Total Transaction Amount'].sum().sort_values(ascending=False)
+                        st.markdown(':violet[Transaction Analysis - Transaction Amount  (INR)]')
+                        st.dataframe(df, use_container_width=True) 
+
+                col1, col2 = st.columns([2,3.5])
+                with col2:
+                    fig_tt = px.sunburst(df_tu_con, path=['division', 'Name'],
+                                        values='Total Registered User',
+                                        color='division',
+                                        color_discrete_map={'State': '#FAA026','District': '#65FAAB', 'District Pincode':'#ADD8E6'},
+                                        hover_data=['division', 'Name', 'Total Registered User'],
+                                        title="Top 10 User Details")
+                    fig_tt.update_layout(title_x=0.15, title_y=0.99, margin=dict(t=20, l=10, r=10, b=0))
+                    st.plotly_chart(fig_tt, theme="streamlit", use_container_width=True)
+                with col1:
+                    if in_typ4 == 'State':
+                        df = df_tu_st.groupby('Name')['Total Registered User'].sum().sort_values(ascending=False)
+                        st.markdown(':violet[Transaction Analysis - Registered User]')
+                        st.dataframe(df, use_container_width=True)
+                    elif in_typ4 == 'Districts':
+                        df = df_tu_dt.groupby('Name')['Total Registered User'].sum().sort_values(ascending=False)
+                        st.markdown(':violet[Transaction Analysis - Registered User]')
+                        st.dataframe(df, use_container_width=True)
+                    elif in_typ4 == 'Pincode':
+                        df = df_tu_pc.groupby('Name')['Total Registered User'].sum().sort_values(ascending=False)
+                        st.markdown(':violet[Transaction Analysis - Registered User]')
+                        st.dataframe(df, use_container_width=True)   
+
+elif selected_page == "GeoInsights":
+    col1, col2, col3 = st.columns(3)
+    with col1:
+                in_yr = st.slider('Select Year', min_value=2018, max_value=2023, key='in_yr')
+    with col2:
+                in_qtr = st.slider('Select Quarter', min_value=1, max_value=4, key='in_qtr')
+    with col3:
+                in_typ = st.selectbox('Select Transaction type',
+                                    ('Recharge & bill payments', 'Peer-to-peer payments', 'Merchant payments', 'Financial Services', 'Others'), key='in_typ')
+    col1,col2 = st.columns(2)
+    with col2:
+                Q1 = """SELECT State, Transactioncount as "Transaction Count", Transactionamount as "Transaction Amount" FROM aggregated_transaction
+                    WHERE Year = %s AND Quarter = %s AND Transactiontype = %s;"""
+                Q11 = pd.read_sql_query(Q1, con, params=(in_yr, in_qtr, in_typ))
+                fig_tra = px.choropleth(Q11,
+                                        geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
+                                        featureidkey='properties.ST_NM',locations='State',color="Transaction Amount",color_continuous_scale='thermal',title = 'Transaction Analysis - Amount')
+                fig_tra.update_geos(fitbounds="locations", visible=False)
+                fig_tra.update_layout(title_font=dict(size=33),title_font_color='#6739b7', height=800)
+                st.plotly_chart(fig_tra,use_container_width=True)
+    with col1:
+                Q2 = """SELECT State, Transactioncount as "Transaction Count"  FROM aggregated_transaction
+                        WHERE Year = %s AND Quarter = %s AND Transactiontype = %s;"""
+                Q21 = pd.read_sql_query(Q2, con, params=(in_yr, in_qtr, in_typ))
+                fig_tra = px.choropleth(Q21,
+                                        geojson="https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson",
+                                        featureidkey='properties.ST_NM',locations='State',color="Transaction Count",color_continuous_scale='thermal',title = 'Transaction Analysis - Count')
+                fig_tra.update_geos(fitbounds="locations", visible=False)
+                fig_tra.update_layout(title_font=dict(size=33),title_font_color='#6739b7', height=800)
+                st.plotly_chart(fig_tra,use_container_width=True)
+            #___________________________________ THE END _______________________________________________#
