@@ -5,6 +5,7 @@ import mysql.connector as sql
 import pymysql 
 from sqlalchemy import create_engine
 
+#Function to get Aggregated Transaction Data
 path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\aggregated\transaction\country\india\state"
 Agg_tran_state_list = os.listdir(path)
 Agg_tra = {'State': [], 'Year': [], 'Quarter': [], 'Transactiontype': [], 'Transactioncount': [], 'Transactionamount': []}
@@ -38,6 +39,7 @@ for i in Agg_tran_state_list:
 
 Aggregated_transaction_DataFrame = pd.DataFrame(Agg_tra)
 
+#Function to get Aggregated User Data
 path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\aggregated\user\country\india\state"
 Agg_user_state_list = os.listdir(path)
 Agg_user = {'State': [], 'Year': [], 'Quarter': [], 'Brands': [], 'UserCount': [], 'UserPercentage': []}
@@ -71,9 +73,9 @@ for i in Agg_transaction_state_list:
 
 Aggregated_user_DataFrame = pd.DataFrame(Agg_user)
 
+#Function to get Map Transaction Data
 path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\map\transaction\hover\country\india\state"
 map_tran_state_list = os.listdir(path)
-
 map_tra = {'State': [], 'Year': [], 'Quarter': [], 'District': [], 'Transaction Count': [], 'Transaction Amount': []}
 
 for i in map_tran_state_list:
@@ -105,6 +107,7 @@ for i in map_tran_state_list:
 
 Map_transaction_DataFrame = pd.DataFrame(map_tra)
 
+#Function to get Map User Data
 path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\map\user\hover\country\india\state"
 map_user_state_list = os.listdir(path)
 map_user = {"State": [], "Year": [], "Quarter": [], "District": [], "Registered Users": [], "Number of Times App Opened": []}
@@ -136,6 +139,7 @@ for i in map_user_state_list:
 
 map_user_DataFrame = pd.DataFrame(map_user)
 
+#Function to get Top Transaction Data
 path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\top\transaction\country\india\state"
 Top_tran_state_list = os.listdir(path)
 Top_tra = {'State': [], 'Year': [], 'Quarter': [], 'District Pincode': [], 'Transaction Count': [], 'Transaction Amount': []}
@@ -169,6 +173,7 @@ for i in Top_tran_state_list:
 
 Top_transaction_DataFrame = pd.DataFrame(Top_tra)
 
+#Function to get Top Transaction District Data
 path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\top\transaction\country\india\state"
 Top_tran_state_list = os.listdir(path)
 Top_tra = {'State': [], 'Year': [], 'Quarter': [], 'District': [], 'Transaction Count': [], 'Transaction Amount': []}
@@ -203,6 +208,7 @@ for i in Top_tran_state_list:
 
 Top_transaction_dist_DataFrame = pd.DataFrame(Top_tra)
 
+#Function to get Top User Data
 path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\top\user\country\india\state"
 top_user_state_list = os.listdir(path)
 top_user = {'State': [], 'Year': [], 'Quarter': [], 'District Pincode': [], 'Registered User': []}
@@ -232,6 +238,7 @@ for i in top_user_state_list:
 
 Top_user_DataFrame = pd.DataFrame(top_user)
 
+#Function to get Top User District Data
 path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\top\user\country\india\state"
 top_user_state_list = os.listdir(path)
 top_user = {'State': [], 'Year': [], 'Quarter': [], 'District': [], 'Registered User': []}
@@ -262,6 +269,7 @@ for i in top_user_state_list:
 
 Top_user_dist_DataFrame = pd.DataFrame(top_user)
 
+#Function to match State name with geo JSON data
 def update_state_names(df, geojson_data):
     # Getting state names from the GeoJSON data in alphabetical order
     state_names = [f['properties']['ST_NM'] for f in geojson_data['features']]
@@ -295,12 +303,13 @@ else:
     print("Failed to fetch GeoJSON data.")
 
 # CONNECTING WITH MYSQL DATABASE
-user="root"
-password="1234"
+user="#####"
+password="#####"
 host="127.0.0.1"
 database= "phonepe_project"
-port = "3306"
+port = "#####"
 
+# Migrating Dataframes to MySQL
 engine = create_engine("mysql+pymysql://{0}:{1}@{2}:{3}/{4}".format(user, password, host, port, database))
 con = engine.connect()
 Aggregated_transaction_DataFrame.to_sql("aggregated_transaction",con=engine, if_exists='replace', index=False)
