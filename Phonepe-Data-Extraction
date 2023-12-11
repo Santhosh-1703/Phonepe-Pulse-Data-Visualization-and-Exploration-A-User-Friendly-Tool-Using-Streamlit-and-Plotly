@@ -1,4 +1,313 @@
 import pandas as pd
 import json
 import os
-from pprint import pprint
+import mysql.connector as sql
+import pymysql 
+from sqlalchemy import create_engine
+
+path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\aggregated\transaction\country\india\state"
+Agg_tran_state_list = os.listdir(path)
+Agg_tra = {'State': [], 'Year': [], 'Quarter': [], 'Transactiontype': [], 'Transactioncount': [], 'Transactionamount': []}
+
+for i in Agg_tran_state_list:
+    capitalized_state_name = i.capitalize()
+    path_i = os.path.join(path, i)
+    Agg_yr = os.listdir(path_i)
+
+    for j in Agg_yr:
+        path_j = os.path.join(path_i, j)
+
+        Agg_yr_list = os.listdir(path_j)
+
+        for k in Agg_yr_list:
+            path_k = os.path.join(path_j, k)
+
+            with open(path_k, 'r') as file:
+                A = json.load(file)
+
+            for l in A['data']['transactionData']:
+                Name = l['name']
+                count = l['paymentInstruments'][0]['count']
+                amount = l['paymentInstruments'][0]['amount']
+                Agg_tra['State'].append(capitalized_state_name.replace('-',' '))
+                Agg_tra['Year'].append(j)
+                Agg_tra['Quarter'].append(int(k.strip('.json')))
+                Agg_tra['Transactiontype'].append(Name)
+                Agg_tra['Transactioncount'].append(count)
+                Agg_tra['Transactionamount'].append(amount)
+
+Aggregated_transaction_DataFrame = pd.DataFrame(Agg_tra)
+
+path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\aggregated\user\country\india\state"
+Agg_user_state_list = os.listdir(path)
+Agg_user = {'State': [], 'Year': [], 'Quarter': [], 'Brands': [], 'UserCount': [], 'UserPercentage': []}
+for i in Agg_transaction_state_list:
+    capitalized_state_name = i.capitalize()
+    path_i = os.path.join(path, i)
+    Agg_yr = os.listdir(path_i)
+
+    for j in Agg_yr:
+        path_j = os.path.join(path_i, j)
+        Agg_yr_list = os.listdir(path_j)
+
+        for k in Agg_yr_list:
+            path_k = os.path.join(path_j, k)
+            Data = open(path_k, 'r')
+            B = json.load(Data)
+
+            try:
+                for l in B["data"]["usersByDevice"]:
+                    brand_name = l["brand"]
+                    count_ = l["count"]
+                    ALL_percentage = l["percentage"]
+                    Agg_user["State"].append(capitalized_state_name.replace('-',' '))
+                    Agg_user["Year"].append(j)
+                    Agg_user["Quarter"].append(int(k.strip('.json')))
+                    Agg_user["Brands"].append(brand_name)
+                    Agg_user["UserCount"].append(count_)
+                    Agg_user["UserPercentage"].append(round(ALL_percentage * 100, 2))
+            except:
+                pass
+
+Aggregated_user_DataFrame = pd.DataFrame(Agg_user)
+
+path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\map\transaction\hover\country\india\state"
+map_tran_state_list = os.listdir(path)
+
+map_tra = {'State': [], 'Year': [], 'Quarter': [], 'District': [], 'Transaction Count': [], 'Transaction Amount': []}
+
+for i in map_tran_state_list:
+    capitalized_state_name = i.capitalize()
+    path_i = os.path.join(path, i)
+    map_yr = os.listdir(path_i)
+
+    for j in map_yr:
+        path_j = os.path.join(path_i, j)
+
+        map_yr_list = os.listdir(path_j)
+
+        for k in map_yr_list:
+            path_k = os.path.join(path_j, k)
+
+            with open(path_k, 'r') as file:
+                c = json.load(file)
+                for l in c["data"]["hoverDataList"]:
+                    District = l["name"]
+                    capitalized_District_name = District.capitalize()
+                    count = l["metric"][0]["count"]
+                    amount = l["metric"][0]["amount"]
+                    map_tra['State'].append(capitalized_state_name.replace('-',' '))
+                    map_tra['Year'].append(j)
+                    map_tra['Quarter'].append(int(k.strip('.json')))
+                    map_tra["District"].append(capitalized_District_name)
+                    map_tra["Transaction Count"].append(count)
+                    map_tra["Transaction Amount"].append(amount)
+
+Map_transaction_DataFrame = pd.DataFrame(map_tra)
+
+path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\map\user\hover\country\india\state"
+map_user_state_list = os.listdir(path)
+map_user = {"State": [], "Year": [], "Quarter": [], "District": [], "Registered Users": [], "Number of Times App Opened": []}
+for i in map_user_state_list:
+    capitalized_state_name = i.capitalize()
+    path_i = os.path.join(path, i)
+    map_yr = os.listdir(path_i)
+
+    for j in Agg_yr:
+        path_j = os.path.join(path_i, j)
+        map_yr_list = os.listdir(path_j)
+
+        for k in map_yr_list:
+            path_k = os.path.join(path_j, k)
+            Data = open(path_k, 'r')
+            D = json.load(Data)
+
+            for l in D["data"]["hoverData"].items():
+                district = l[0]
+                capitalized_district_name = district.capitalize()
+                registereduser = l[1]["registeredUsers"]
+                appUsers = l[1]["appOpens"]
+                map_user['State'].append(capitalized_state_name.replace('-',' '))
+                map_user['Year'].append(j)
+                map_user['Quarter'].append(int(k.strip('.json')))
+                map_user["District"].append(capitalized_district_name)
+                map_user["Registered Users"].append(registereduser)
+                map_user["Number of Times App Opened"].append(appUsers)
+
+map_user_DataFrame = pd.DataFrame(map_user)
+
+path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\top\transaction\country\india\state"
+Top_tran_state_list = os.listdir(path)
+Top_tra = {'State': [], 'Year': [], 'Quarter': [], 'District Pincode': [], 'Transaction Count': [], 'Transaction Amount': []}
+
+for i in Top_tran_state_list:
+    capitalized_state_name = i.capitalize()
+    path_i = os.path.join(path, i)
+    Top_yr = os.listdir(path_i)
+
+    for j in Top_yr:
+        path_j = os.path.join(path_i, j)
+
+        Top_yr_list = os.listdir(path_j)
+
+        for k in Top_yr_list:
+            path_k = os.path.join(path_j, k)
+
+            with open(path_k, 'r') as file:
+                E = json.load(file)
+
+            for l in E['data']['pincodes']:
+                Name = l['entityName']
+                count = l['metric']['count']
+                amount = l['metric']['amount']
+                Top_tra['State'].append(capitalized_state_name.replace('-',' '))
+                Top_tra['Year'].append(j)
+                Top_tra['Quarter'].append(int(k.strip('.json')))
+                Top_tra['District Pincode'].append(Name)
+                Top_tra['Transaction Count'].append(count)
+                Top_tra['Transaction Amount'].append(round(amount, 2))
+
+Top_transaction_DataFrame = pd.DataFrame(Top_tra)
+
+path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\top\transaction\country\india\state"
+Top_tran_state_list = os.listdir(path)
+Top_tra = {'State': [], 'Year': [], 'Quarter': [], 'District': [], 'Transaction Count': [], 'Transaction Amount': []}
+
+for i in Top_tran_state_list:
+    capitalized_state_name = i.capitalize()
+    path_i = os.path.join(path, i)
+    Top_yr = os.listdir(path_i)
+
+    for j in Top_yr:
+        path_j = os.path.join(path_i, j)
+
+        Top_yr_list = os.listdir(path_j)
+
+        for k in Top_yr_list:
+            path_k = os.path.join(path_j, k)
+
+            with open(path_k, 'r') as file:
+                E = json.load(file)
+
+            for l in E['data']['districts']:
+                Name = l['entityName']
+                count = l['metric']['count']
+                amount = l['metric']['amount']
+                capitalized_district_name = Name.capitalize()
+                Top_tra['State'].append(capitalized_state_name.replace('-',' '))
+                Top_tra['Year'].append(j)
+                Top_tra['Quarter'].append(int(k.strip('.json')))
+                Top_tra['District'].append(capitalized_district_name)
+                Top_tra['Transaction Count'].append(count)
+                Top_tra['Transaction Amount'].append(round(amount, 2))
+
+Top_transaction_dist_DataFrame = pd.DataFrame(Top_tra)
+
+path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\top\user\country\india\state"
+top_user_state_list = os.listdir(path)
+top_user = {'State': [], 'Year': [], 'Quarter': [], 'District Pincode': [], 'Registered User': []}
+
+for i in top_user_state_list:
+    capitalized_state_name = i.capitalize()
+    path_i = os.path.join(path, i)
+    Top_yr = os.listdir(path_i)
+
+    for j in Top_yr:
+        path_j = os.path.join(path_i, j)
+        Top_yr_list = os.listdir(path_j)
+
+        for k in Top_yr_list:
+            path_k = os.path.join(path_j, k)
+            with open(path_k, 'r') as file:
+                F = json.load(file)
+
+            for l in F['data']['pincodes']:
+                Name = l['name']
+                registeredUser = l['registeredUsers']
+                top_user['State'].append(capitalized_state_name.replace('-',' '))
+                top_user['Year'].append(j)
+                top_user['Quarter'].append(int(k.strip('.json')))
+                top_user['District Pincode'].append(Name)
+                top_user['Registered User'].append(registeredUser)
+
+Top_user_DataFrame = pd.DataFrame(top_user)
+
+path = r"C:\Users\SANTHOSH RAJENDRAN\Desktop\GUVI Python\Project - PhonePe\pulse-master\pulse-master\data\top\user\country\india\state"
+top_user_state_list = os.listdir(path)
+top_user = {'State': [], 'Year': [], 'Quarter': [], 'District': [], 'Registered User': []}
+
+for i in top_user_state_list:
+    capitalized_state_name = i.capitalize()
+    path_i = os.path.join(path, i)
+    Top_yr = os.listdir(path_i)
+
+    for j in Top_yr:
+        path_j = os.path.join(path_i, j)
+        Top_yr_list = os.listdir(path_j)
+
+        for k in Top_yr_list:
+            path_k = os.path.join(path_j, k)
+            with open(path_k, 'r') as file:
+                F = json.load(file)
+
+            for l in F['data']['districts']:
+                Name = l['name']
+                registeredUser = l['registeredUsers']
+                capitalized_district_name = Name.capitalize()
+                top_user['State'].append(capitalized_state_name.replace('-',' '))
+                top_user['Year'].append(j)
+                top_user['Quarter'].append(int(k.strip('.json')))
+                top_user['District'].append(capitalized_district_name)
+                top_user['Registered User'].append(registeredUser)
+
+Top_user_dist_DataFrame = pd.DataFrame(top_user)
+
+def update_state_names(df, geojson_data):
+    # Getting state names from the GeoJSON data in alphabetical order
+    state_names = [f['properties']['ST_NM'] for f in geojson_data['features']]
+    states = sorted(state_names)
+    
+    # Create a mapping dictionary for old and new state names
+    state_mapping = dict(zip(df['State'].sort_values().unique(), states))
+    
+    # Updating the 'state' column with new state names
+    df['State'] = df['State'].map(state_mapping)
+    return df
+
+# Fetching GeoJSON data from the URL
+geojson_url = 'https://gist.githubusercontent.com/jbrobst/56c13bbbf9d97d187fea01ca62ea5112/raw/e388c4cae20aa53cb5090210a42ebb9b765c0a36/india_states.geojson'
+response = requests.get(geojson_url)
+
+if response.status_code == 200:
+    geojson_data = response.json()
+    
+    # Update state names in each DataFrame
+    Aggregated_transaction_DataFrame = update_state_names(Aggregated_transaction_DataFrame, geojson_data)
+    Aggregated_user_DataFrame = update_state_names(Aggregated_user_DataFrame, geojson_data)
+    Map_transaction_DataFrame = update_state_names(Map_transaction_DataFrame, geojson_data)
+    map_user_DataFrame = update_state_names(map_user_DataFrame, geojson_data)
+    Top_transaction_DataFrame = update_state_names(Top_transaction_DataFrame, geojson_data)
+    Top_transaction_dist_DataFrame = update_state_names(Top_transaction_dist_DataFrame, geojson_data)
+    Top_user_DataFrame = update_state_names(Top_user_DataFrame, geojson_data)
+    Top_user_dist_DataFrame = update_state_names(Top_user_dist_DataFrame, geojson_data)
+    
+else:
+    print("Failed to fetch GeoJSON data.")
+
+# CONNECTING WITH MYSQL DATABASE
+user="root"
+password="1234"
+host="127.0.0.1"
+database= "phonepe_project"
+port = "3306"
+
+engine = create_engine("mysql+pymysql://{0}:{1}@{2}:{3}/{4}".format(user, password, host, port, database))
+con = engine.connect()
+Aggregated_transaction_DataFrame.to_sql("aggregated_transaction",con=engine, if_exists='replace', index=False)
+Aggregated_user_DataFrame.to_sql("aggregated_user",con=engine, if_exists='replace', index=False)
+Map_transaction_DataFrame.to_sql("map_transaction",con=engine, if_exists='replace', index=False)
+map_user_DataFrame.to_sql("map_user",con=engine, if_exists='replace', index=False)
+Top_transaction_DataFrame.to_sql("top_transaction",con=engine, if_exists='replace', index=False)
+Top_user_DataFrame.to_sql("top_user",con=engine, if_exists='replace', index=False)
+Top_transaction_dist_DataFrame.to_sql("top_transaction_by_dist",con=engine, if_exists='replace', index=False)
+Top_user_dist_DataFrame.to_sql("top_user_by_dist",con=engine, if_exists='replace', index=False)
